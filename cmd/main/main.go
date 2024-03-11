@@ -2,6 +2,7 @@ package main
 
 import (
 	"C"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -17,6 +18,7 @@ import (
 	"github.com/tidwall/gjson"
 	"golang.design/x/clipboard"
 )
+import "strconv"
 
 var PLACEHOLDER_IMAGE string = "https://static.wikia.nocookie.net/mtgsalvation_gamepedia/images/f/f8/Magic_card_back.jpg/revision/latest?cb=20140813141013"
 var EDHREC_BASE_URL string = "https://edhrec.com"
@@ -29,10 +31,12 @@ func GetCommanderImageAndDecklist(selected_colors []string) (string, string) {
 	var query string = BuildScryfallCommanderQuery(selected_colors)
 	fmt.Println("Retrieving Commander with Query: " + query)
 	commanderData, err := GetScryfallCommanderData(query)
+	fmt.Println(commanderData)
 	if err != nil {
 		return PLACEHOLDER_IMAGE, "" // return a placeholder image and no decklist
 	} else {
 		card_name, image_uri := ParseScryfallData(commanderData)
+		fmt.Println(card_name + " : " + image_uri)
 		deck_list, err := GetEDHRecAvgDecklist(card_name)
 		if err != nil {
 			return PLACEHOLDER_IMAGE, "" // return a placeholder image and no decklist
@@ -58,11 +62,26 @@ func GetEDHRecAvgDecklist(commander string) (string, error) {
 			return "", err
 		} else {
 			page_json := string(page_bytes)
-			fmt.Println(page_json)
-			deck_json := gjson.Get(page_json, "pageProps.data.deck").String()
-			fmt.Println(deck_json)
-			deck_json = strings.ReplaceAll(deck_json, "\",\"", "\n")
-			return deck_json[2 : len(deck_json)-2], nil
+			num_decks_value := gjson.Get(page_json, "pageProps.data.num_decks").String() // if num_decks does not exist
+			if num_decks_value == "" {
+				fmt.Println("REST")
+				deck_json := gjson.Get(page_json, "pageProps.data.deck").String()
+				fmt.Println(deck_json)
+				deck_json = strings.ReplaceAll(deck_json, "\",\"", "\n")
+				if len(deck_json) > 4 {
+					return deck_json[2 : len(deck_json)-2], nil
+				} else {
+					return "", errors.New("The deck inside the response was empty")
+				}
+			}
+			_, err := strconv.Atoi(num_decks_value)
+			if err != nil {
+				fmt.Println("ERROR" + err.Error())
+				return "", err
+			} else {
+				fmt.Println("NO DECKS")
+				return "", errors.New("no decks found for commander: " + commander)
+			}
 		}
 	}
 }
@@ -72,8 +91,8 @@ func GetEDHRecAvgDecklist(commander string) (string, error) {
 // Returns :  The complete scryfall api request with the query as a string
 func BuildScryfallCommanderQuery(selected_colors []string) string {
 	var query string = "https://api.scryfall.com/cards/random?q="
-	query += url.QueryEscape("is:Commander")                                                     // we only query for commanders
-	if len(selected_colors) == 0 || len(selected_colors) == 1 && selected_colors[0] == "Exact" { // if nothing is selected or only the exact box is selected we dont add colors to the query
+	query += url.QueryEscape("is:Commander (game:paper) legal:commander (type:creature OR type:planeswalker)") // we only query for commanders
+	if len(selected_colors) == 0 || len(selected_colors) == 1 && selected_colors[0] == "Exact" {               // if nothing is selected or only the exact box is selected we dont add colors to the query
 		return query
 	} else { // if colors are selected
 		var colors string = "<="            // assume non-exact matches
@@ -109,11 +128,16 @@ func ParseScryfallData(json_data string) (string, string) {
 	var replacer strings.Replacer = *strings.NewReplacer(
 		" ", "-",
 		",", "",
-		"'", "")
+		"'", "",
+	)
 
 	var formatted_card_name string = strings.ToLower(replacer.Replace(card_name))
-	// get uri of card image
+	first_card_name, _, found := strings.Cut(formatted_card_name, "-//")
 	image_uri := gjson.Get(json_data, "image_uris.normal").String()
+	if found { // if the card is double faced we get only the first card image
+		formatted_card_name = first_card_name
+		image_uri = gjson.Get(json_data, "card_faces.0.image_uris.normal").String()
+	}
 
 	return formatted_card_name, image_uri
 }
