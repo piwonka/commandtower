@@ -19,3 +19,10 @@
 
 # Go workspace file
 go.work
+
+# specific files
+fyne.syso
+fyne_metadata_init.go
+icon.svg
+rsrc_windows_386.syso
+rsrc_windows_amd64.syso
