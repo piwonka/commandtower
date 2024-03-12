@@ -27,6 +27,28 @@ func GetImageResource(imageUri string) fyne.Resource {
 	return r
 }
 
+func NewCheckboxWithIcon(iconPath string) (*widget.Check, *fyne.Container) {
+
+	checkBox := widget.NewCheck("", nil)
+	resource, err := fyne.LoadResourceFromPath(iconPath)
+	if err != nil {
+		return nil, nil
+	}
+	img := canvas.NewImageFromResource(resource)
+	img.FillMode = canvas.ImageFillOriginal
+	return checkBox, container.NewVBox(checkBox, img)
+}
+
+func GetSelectedChoices(choiceColorMap map[*widget.Check]string) []string {
+	result := make([]string, 0)
+	for check, color := range choiceColorMap {
+		if check.Checked {
+			result = append(result, color)
+		}
+	}
+	return result
+}
+
 // The main function that is excecuted
 // Params: None
 // Returns: Nothing
@@ -56,10 +78,13 @@ func main() {
 	searchQuery.PlaceHolder = "Scryfall Search Query"
 
 	// init checkBoxes
-	colors := []string{"White", "Black", "Blue", "Red", "Green", "Exact"}
-	checkGroup := widget.NewCheckGroup(colors, nil)
-	checkBoxes := container.NewHBox(container.NewCenter(checkGroup))
-	checkGroup.Horizontal = true
+	choices := container.NewHBox()
+	choiceColorMap := make(map[*widget.Check]string)
+	for _, color := range []string{"w", "b", "u", "r", "g", "c", "e"} {
+		checkBox, checkContainer := NewCheckboxWithIcon("resources\\" + color + ".svg")
+		choiceColorMap[checkBox] = color
+		choices.Add(checkContainer)
+	}
 
 	// Image
 	img := canvas.NewImageFromResource(nil)
@@ -81,20 +106,20 @@ func main() {
 	})
 	//Next
 	next := widget.NewButtonWithIcon("", theme.NavigateNextIcon(), func() {
-		image, _ := GetNextCommanderData(&state, checkGroup.Selected, searchQuery.Text)
+		image, _ := GetNextCommanderData(&state, GetSelectedChoices(choiceColorMap), searchQuery.Text)
 		img.Resource = image
 		img.Refresh()
 	})
 
 	buttons := container.NewCenter(container.NewHBox(previous, get, next))
-	vBox := container.NewVBox(searchQuery, img, checkBoxes, buttons)
+	vBox := container.NewVBox(searchQuery, img, container.NewCenter(choices), buttons)
 	w.SetContent(vBox)
 	res, _ := fyne.LoadResourceFromPath("icon.png")
 	w.SetIcon(res)
 
 	// Load initial state
 	// pull any first commander image
-	image, _ := GetNextCommanderData(&state, checkGroup.Selected, searchQuery.Text) // get any first commander (nothing selected)
+	image, _ := GetNextCommanderData(&state, GetSelectedChoices(choiceColorMap), searchQuery.Text) // get any first commander (nothing selected)
 	// Set the Image inside the View and Refresh
 	img.Resource = image
 	img.Refresh()

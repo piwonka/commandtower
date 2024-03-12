@@ -93,18 +93,10 @@ func BuildScryfallCommanderQuery(selectedColors []string, searchQuery string) st
 		var colors string = "<="           // assume non-exact matches
 		for _, c := range selectedColors { // add each selected color to the query
 			switch c {
-			case "White":
-				colors += "W"
-			case "Black":
-				colors += "B"
-			case "Blue":
-				colors += "U"
-			case "Red":
-				colors += "R"
-			case "Green":
-				colors += "G"
-			case "Exact": // if exact matches are wanted, remove the '<' from the colors string
+			case "e": // if exact matches are wanted, remove the '<' from the colors string
 				colors = colors[1:]
+			default:
+				colors += c
 			}
 		}
 		return query + url.QueryEscape(" color"+colors)
