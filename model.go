@@ -23,20 +23,21 @@ var EdhrecBaseUrl string = "https://edhrec.com"
 // Selects a random commander depending on the input constraints and fetches an image and a decklist for said commander
 // Params: An Array of strings containing all currently selected color checkboxes (and the "Exact" checkbox) from the UI
 // Returns: A Tuple of strings, the first of which being the image URI of the commander and the second being the decklist for the commander
-func GetCommanderImageAndDecklist(selectedColors []string, searchQuery string) (string, string) {
+func GetCommanderImageAndDecklist(selectedColors []string, searchQuery string) (string, string, float64) {
 	var query string = BuildScryfallCommanderQuery(selectedColors, searchQuery)
 	fmt.Println("Retrieving Commander with Query: " + query)
 	commanderData, err := GetScryfallCommanderData(query)
 	if err != nil {
-		return PlaceholderImage, "" // return a placeholder image and no decklist
+		return PlaceholderImage, "", 0.0 // return a placeholder image and no decklist
 	} else {
 		cardName, imageUri := ParseScryfallData(commanderData)
 		fmt.Println(cardName + " : " + imageUri)
 		deckList, err := GetEDHRecAvgDecklist(cardName)
 		if err != nil {
-			return PlaceholderImage, "" // return a placeholder image and no decklist
+			return PlaceholderImage, "", 0.0 // return a placeholder image and no decklist
 		} else {
-			return imageUri, deckList
+			price := GetScryfallPricingData(strings.Split(deckList, "\n"))
+			return imageUri, deckList, price
 		}
 	}
 }
@@ -179,4 +180,47 @@ func GetBuildId() string {
 			return id
 		}
 	}
+}
+
+// GetScryfallPricingData
+// Build a json object of card identifiers for a decklist and retrieve pricing information for the entire deck
+// params: a decklist as an [] string with every entry being formatted as "1 <CardName>"
+// returns the sum of prices of the cheapest, most recent printings of all cards in the request in euro
+func GetScryfallPricingData(deck []string) float64 {
+	sum := 0.0
+	part1, part2 := deck[:len(deck)/2], deck[len(deck)/2:]
+	for i := range 2 {
+		// build json array
+		jsonArray := "{\"identifiers\":["
+		localDeck := part1
+		if i != 0 {
+			localDeck = part2
+		}
+
+		for _, card := range localDeck {
+			name := strings.SplitN(card, " ", 2)[1]
+			jsonArray += "{\"name\":\"" + name + "\"},"
+		}
+
+		jsonArray = jsonArray[:len(jsonArray)-1] + "]}"
+
+		resp, err := http.Post("https://api.scryfall.com/cards/collection/", "application/json", strings.NewReader(jsonArray))
+		if err != nil {
+			return 0.0
+		} else {
+			body, err := io.ReadAll(resp.Body)
+			defer resp.Body.Close()
+			if err != nil {
+				return 0.0
+			} else {
+				data := string(body)
+				prices := gjson.Get(data, "data.#.prices.eur")
+				for _, p := range prices.Array() {
+					sum += p.Float()
+				}
+			}
+		}
+	}
+	fmt.Println("Price:" + strconv.FormatFloat(sum, 'f', 2, 64))
+	return sum
 }
