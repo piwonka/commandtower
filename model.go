@@ -16,25 +16,24 @@ import (
 	"unicode"
 )
 
-var PlaceholderImage string = "https://static.wikia.nocookie.net/mtgsalvation_gamepedia/images/f/f8/Magic_card_back.jpg/revision/latest?cb=20140813141013"
 var EdhrecBaseUrl string = "https://edhrec.com"
 
 // GetCommanderImageAndDecklist
 // Selects a random commander depending on the input constraints and fetches an image and a decklist for said commander
 // Params: An Array of strings containing all currently selected color checkboxes (and the "Exact" checkbox) from the UI
-// Returns: A Tuple of strings, the first of which being the image URI of the commander and the second being the decklist for the commander
+// Returns: A Tuple of 2 strings and a float, the first of the strings being the image URI of the commander and the second being the decklist for the commander and the float being the price of the decklist
 func GetCommanderImageAndDecklist(selectedColors []string, searchQuery string) (string, string, float64) {
 	var query string = BuildScryfallCommanderQuery(selectedColors, searchQuery)
 	fmt.Println("Retrieving Commander with Query: " + query)
 	commanderData, err := GetScryfallCommanderData(query)
 	if err != nil {
-		return PlaceholderImage, "", 0.0 // return a placeholder image and no decklist
+		return "", "", 0.0 // return a placeholder image and no decklist
 	} else {
 		cardName, imageUri := ParseScryfallData(commanderData)
 		fmt.Println(cardName + " : " + imageUri)
 		deckList, err := GetEDHRecAvgDecklist(cardName)
 		if err != nil {
-			return PlaceholderImage, "", 0.0 // return a placeholder image and no decklist
+			return "", "", 0.0 // return a placeholder image and no decklist
 		} else {
 			price := GetScryfallPricingData(strings.Split(deckList, "\n"))
 			return imageUri, deckList, price
@@ -88,7 +87,7 @@ func GetEDHRecAvgDecklist(commander string) (string, error) {
 func BuildScryfallCommanderQuery(selectedColors []string, searchQuery string) string {
 	var query string = "https://api.scryfall.com/cards/random?q="
 	query += url.QueryEscape("is:Commander (game:paper) legal:commander (type:creature OR type:planeswalker) " + searchQuery + " ") // we only query for commanders
-	if len(selectedColors) == 0 || len(selectedColors) == 1 && selectedColors[0] == "Exact" {                                       // if nothing is selected or only the exact box is selected we dont add colors to the query
+	if len(selectedColors) == 0 || len(selectedColors) == 1 && selectedColors[0] == "e" {                                           // if nothing is selected or only the exact box is selected we dont add colors to the query
 		return query
 	} else { // if colors are selected
 		var colors string = "<="           // assume non-exact matches
@@ -127,7 +126,7 @@ func ParseScryfallData(jsonData string) (string, string) {
 		formattedCardName = res
 	}
 	firstCardName, _, found := strings.Cut(formattedCardName, "-//")
-	imageUri := gjson.Get(jsonData, "image_uris.normal").String()
+	imageUri := gjson.Get(jsonData, "image_uris.border_crop").String()
 	if found { // if the card is double faced we get only the first card image
 		formattedCardName = firstCardName
 		if imageUri == "" {

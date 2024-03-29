@@ -20,11 +20,7 @@ import (
 func GetImageResource(imageUri string) fyne.Resource {
 	r, err := fyne.LoadResourceFromURLString(imageUri) // load image
 	if err != nil {                                    // if image can not be loaded attempt to load a placeholder
-		r, err = fyne.LoadResourceFromURLString(PlaceholderImage)
-		if err != nil { // if placeholder cant be loaded either, end the execution with error TODO: Download placeholder image, have it inside the program, do not retrieve it from online to secure failure case
-			panic(err)
-		}
-		return r
+		return resourcePlaceholderPng
 	}
 	return r
 }
@@ -87,6 +83,7 @@ func main() {
 
 	// Image
 	img := canvas.NewImageFromResource(nil)
+	img.Resize(fyne.NewSize(480, 680))
 	img.FillMode = canvas.ImageFillOriginal
 
 	// price label
