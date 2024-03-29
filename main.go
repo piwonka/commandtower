@@ -86,44 +86,57 @@ func main() {
 	img.Resize(fyne.NewSize(480, 680))
 	img.FillMode = canvas.ImageFillOriginal
 
+	// Price Checking
+	priceContainer := container.NewCenter()
 	// price label
 	price := binding.NewString()
 	priceLabel := widget.NewLabel("")
 	priceLabel.Bind(price)
 
+	// price Button
+	priceCheck := widget.NewButton("Check Price", func() {
+		p := GetCurrentDeckPrice(&state)
+		price.Set(strconv.FormatFloat(p, 'f', 2, 64) + "€")
+		priceContainer.RemoveAll()
+		priceContainer.Add(priceLabel)
+	})
+	priceContainer.Add(priceCheck)
+
 	// Buttons
 	// Previous
 	previous := widget.NewButtonWithIcon("", theme.NavigateBackIcon(), func() {
-		image, _, p := GetPreviousCommanderData(&state)
+		image := GetPreviousCommanderData(&state)
 		if image != nil { // if there is a previous commander
 			img.Resource = image
 			img.Refresh()
-			price.Set(strconv.FormatFloat(p, 'f', 2, 64) + "€")
+			priceContainer.RemoveAll()
+			priceContainer.Add(priceCheck)
 		}
 
 	})
 	// Get Decklist
 	get := widget.NewButtonWithIcon("", theme.ContentCopyIcon(), func() {
-		_, deckList, _ := GetCurrentCommanderData(&state)
+		deckList := GetCurrentDeckList(&state)
 		clipboard.Write(clipboard.FmtText, []byte(deckList))
 	})
 	//Next
 	next := widget.NewButtonWithIcon("", theme.NavigateNextIcon(), func() {
-		image, _, p := GetNextCommanderData(&state, GetSelectedChoices(choiceColorMap), searchQuery.Text)
-		price.Set(strconv.FormatFloat(p, 'f', 2, 64) + "€")
+		image := GetNextCommanderData(&state, GetSelectedChoices(choiceColorMap), searchQuery.Text)
 		img.Resource = image
 		img.Refresh()
+		priceContainer.RemoveAll()
+		priceContainer.Add(priceCheck)
 	})
 
 	buttons := container.NewCenter(container.NewHBox(previous, get, next))
-	vBox := container.NewVBox(searchQuery, img, container.NewCenter(choices), buttons, container.NewCenter(priceLabel))
+	vBox := container.NewVBox(searchQuery, img, container.NewCenter(choices), buttons, priceContainer)
 	w.SetContent(vBox)
 	w.SetIcon(resourceIconPng)
 
 	// Load initial state
 	// pull any first commander image
-	image, _, p := GetNextCommanderData(&state, GetSelectedChoices(choiceColorMap), searchQuery.Text) // get any first commander (nothing selected)
-	price.Set(strconv.FormatFloat(p, 'f', 2, 64) + "€")
+	image := GetNextCommanderData(&state, GetSelectedChoices(choiceColorMap), searchQuery.Text) // get any first commander (nothing selected)
+	//price.Set(strconv.FormatFloat(p, 'f', 2, 64) + "€")
 	// Set the Image inside the View and Refresh
 	img.Resource = image
 	img.Refresh()

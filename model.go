@@ -42,6 +42,18 @@ func GetCommanderImageAndDecklist(selectedColors []string, searchQuery string) (
 	}
 }
 
+func GetCommanderFromScryfall(selectedColors []string, searchQuery string) (string, string) {
+	var query = BuildScryfallCommanderQuery(selectedColors, searchQuery)
+	fmt.Println("Retrieving Commander with Query: " + query)
+	commanderData, err := GetScryfallCommanderData(query)
+	if err != nil {
+		return "", "" // no commander found -> return empty name and placeholder pic
+	} else {
+		cardName, imageUri := ParseScryfallData(commanderData)
+		return cardName, imageUri
+	}
+}
+
 // GetEDHRecAvgDecklist
 // Retrieves the average decklist for a given commander name from EDHRec.com
 // Params: The name of the commander the decklist shall be retrieved for
@@ -64,6 +76,7 @@ func GetEDHRecAvgDecklist(commander string) (string, error) {
 				deckJson := gjson.Get(pageJson, "pageProps.data.deck").String()
 				deckJson = strings.ReplaceAll(deckJson, "\",\"", "\n")
 				if len(deckJson) > 4 {
+					fmt.Println("Deck copied!")
 					return deckJson[2 : len(deckJson)-2], nil
 				} else {
 					return "", errors.New("the deck inside the response was empty")
@@ -208,29 +221,22 @@ func GetScryfallPricingData(deck []string, numberOfGoRoutines int) float64 {
 				// fetch prices for list
 				resp, err := http.Post("https://api.scryfall.com/cards/collection/", "application/json", strings.NewReader(jsonArray))
 				if err != nil {
-					println("Test-e")
 					result <- 0.0
-					println("Test-e2")
 				} else {
 					body, err := io.ReadAll(resp.Body)
 					defer resp.Body.Close()
 					if err != nil {
-						println("Test-f")
 						result <- 0.0
-						println("Test-f2")
 					} else {
 						data := string(body)
 						prices := gjson.Get(data, "data.#.prices.eur")
 						sum := 0.0
 						for _, p := range prices.Array() {
-							println("Test2")
 							sum += p.Float()
-							println("Test3")
 						}
 						result <- sum
 					}
 				}
-				println("Test")
 			}(i)
 		}
 		for range numberOfGoRoutines {
