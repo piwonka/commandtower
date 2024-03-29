@@ -1,3 +1,4 @@
+<a name="readme-top"></a>
 <!-- PROJECT SHIELDS -->
 <!--
 *** I'm using markdown "reference style" links for readability.
@@ -10,8 +11,7 @@
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
-[![MIT License][license-shield]][license-url]
-
+[![GPL License][license-shield]][license-url]
 
 
 <!-- PROJECT LOGO -->
@@ -34,7 +34,6 @@
 <details>
   <summary>Table of Contents</summary>
   <ol>
-    <li><a href="#about-the-project">About The Project</a></li>
     <li><a href="#installation">Installation</a></li>
     <li><a href="#usage">Usage</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
@@ -54,12 +53,7 @@
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- GETTING STARTED -->
-## Getting Started
-
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
-
-### Installation
+## Installation
 
 1. Go to the the releases page of this repository and download the CommandTower_win.exe file of the latest release
    [Here] https://github.com/piwonka/commandtower/releases
@@ -148,6 +142,3 @@ Icons for this Project have been kindly provided by:
 [license-shield]: https://img.shields.io/github/license/piwonka/commandtower.svg?style=for-the-badge
 [license-url]: https://github.com/piwonka/commandtower/blob/master/LICENSE.txt
 [product-screenshot]: resources/screenshot.png
-
-
-[Next.js]: https://img.shields.io/badge/next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white
