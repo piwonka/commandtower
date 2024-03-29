@@ -29,13 +29,9 @@ func GetImageResource(imageUri string) fyne.Resource {
 	return r
 }
 
-func NewCheckboxWithIcon(iconPath string) (*widget.Check, *fyne.Container) {
+func NewCheckboxWithIcon(resource *fyne.StaticResource) (*widget.Check, *fyne.Container) {
 
 	checkBox := widget.NewCheck("", nil)
-	resource, err := fyne.LoadResourceFromPath(iconPath)
-	if err != nil {
-		return nil, nil
-	}
 	img := canvas.NewImageFromResource(resource)
 	img.FillMode = canvas.ImageFillOriginal
 	return checkBox, container.NewVBox(checkBox, img)
@@ -82,8 +78,9 @@ func main() {
 	// init checkBoxes
 	choices := container.NewHBox()
 	choiceColorMap := make(map[*widget.Check]string)
-	for _, color := range []string{"w", "b", "u", "r", "g", "c", "e"} {
-		checkBox, checkContainer := NewCheckboxWithIcon("resources\\" + color + ".svg")
+	resources := []*fyne.StaticResource{resourceWSvg, resourceBSvg, resourceUSvg, resourceRSvg, resourceGSvg, resourceCSvg, resourceESvg} // TODO: fix this hack, there must be a way to reference these resources by their StaticName
+	for i, color := range []string{"w", "b", "u", "r", "g", "c", "e"} {
+		checkBox, checkContainer := NewCheckboxWithIcon(resources[i])
 		choiceColorMap[checkBox] = color
 		choices.Add(checkContainer)
 	}
@@ -124,8 +121,7 @@ func main() {
 	buttons := container.NewCenter(container.NewHBox(previous, get, next))
 	vBox := container.NewVBox(searchQuery, img, container.NewCenter(choices), buttons, container.NewCenter(priceLabel))
 	w.SetContent(vBox)
-	res, _ := fyne.LoadResourceFromPath("icon.png")
-	w.SetIcon(res)
+	w.SetIcon(resourceIconPng)
 
 	// Load initial state
 	// pull any first commander image
