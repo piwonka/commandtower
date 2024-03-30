@@ -75,7 +75,7 @@ By Pressing: "More Information" -> "Run Anyways" you can circumvent this.
 Here is a quick rundown of the UI elements:
 * "Scyfall Search Query" is a TextField where you can enter specific search queries for names, types
   * The search syntax is equal to the [Scryfall syntax](https://scryfall.com/docs/syntax)
-  * Note: entering a color query here should be avoided, i havent tested how it behaves in combination with the color checkboxes
+  * Note: entering a color query here should be avoided, i haven't tested how it behaves in combination with the color checkboxes
 * Card Image
   * The randomly generated commanders will be displayed here, if the commander has no valid deck or the query ran into an error a placeholder cardback will be displayed
 * Color checkboxes (In Order: White, Black, Blue, Red, Green, Colorless, Exact)
@@ -89,9 +89,9 @@ Here is a quick rundown of the UI elements:
     * the formate is:    <amount> <Cardname> \n ...
   * Next (->)
     * retrieves a new commander for the given query and color selection
-* Price
+* Check Price
   * Displays a price estimate for the deck in Euro ( might add $ toggle in the future, sorry non-europeans :) ) this is generally lowballed, since it checks for the cheapest possible price of the newest print of each card in the deck.
-
+  * The Price check is a very expensive operation, so expect to wait some seconds for it to complete (performance linked to the price checking api)
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 

@@ -19,29 +19,10 @@ import (
 var EdhrecBaseUrl = "https://edhrec.com"
 var NumberOfGoRoutines = 2
 
-// GetCommanderImageAndDecklist
-// Selects a random commander depending on the input constraints and fetches an image and a decklist for said commander
+// GetCommanderFromScryfall
+// Selects a random commander depending on the input constraints and fetches an image and for said commander
 // Params: An Array of strings containing all currently selected color checkboxes (and the "Exact" checkbox) from the UI
-// Returns: A Tuple of 2 strings and a float, the first of the strings being the image URI of the commander and the second being the decklist for the commander and the float being the price of the decklist
-func GetCommanderImageAndDecklist(selectedColors []string, searchQuery string) (string, string, float64) {
-	var query = BuildScryfallCommanderQuery(selectedColors, searchQuery)
-	fmt.Println("Retrieving Commander with Query: " + query)
-	commanderData, err := GetScryfallCommanderData(query)
-	if err != nil {
-		return "", "", 0.0 // return a placeholder image and no decklist
-	} else {
-		cardName, imageUri := ParseScryfallData(commanderData)
-		fmt.Println(cardName + " : " + imageUri)
-		deckList, err := GetEDHRecAvgDecklist(cardName)
-		if err != nil {
-			return "", "", 0.0 // return a placeholder image and no decklist
-		} else {
-			price := GetScryfallPricingData(strings.Split(deckList, "\n"), NumberOfGoRoutines)
-			return imageUri, deckList, price
-		}
-	}
-}
-
+// Returns: A Tuple of 2 strings, the first of which being the formatted name of the commander and the second being the link to its card image
 func GetCommanderFromScryfall(selectedColors []string, searchQuery string) (string, string) {
 	var query = BuildScryfallCommanderQuery(selectedColors, searchQuery)
 	fmt.Println("Retrieving Commander with Query: " + query)

@@ -136,7 +136,6 @@ func main() {
 	// Load initial state
 	// pull any first commander image
 	image := GetNextCommanderData(&state, GetSelectedChoices(choiceColorMap), searchQuery.Text) // get any first commander (nothing selected)
-	//price.Set(strconv.FormatFloat(p, 'f', 2, 64) + "€")
 	// Set the Image inside the View and Refresh
 	img.Resource = image
 	img.Refresh()

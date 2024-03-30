@@ -1,8 +1,10 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"fyne.io/fyne/v2"
+	"os"
 	"strings"
 )
 
@@ -15,20 +17,15 @@ type SessionState struct {
 	prevCommanderDeckPrices []float64
 }
 
-func GetCurrentCommanderData(state *SessionState) fyne.Resource {
-	if len(state.prevCommanderImages) > 0 {
-		resource := state.prevCommanderImages[state.commanderCount-state.backSteps]
-		return resource
-	} else {
-		return nil
-	}
-}
-
 func GetPreviousCommanderData(state *SessionState) fyne.Resource {
 	if state.commanderCount > 0 && state.backSteps < state.commanderCount {
 		state.backSteps += 1
-		resource := GetCurrentCommanderData(state)
-		return resource
+		if len(state.prevCommanderImages) > 0 {
+			resource := state.prevCommanderImages[state.commanderCount-state.backSteps]
+			return resource
+		} else {
+			return nil
+		}
 	} else {
 		return nil
 	}
@@ -87,4 +84,23 @@ func GetCurrentDeckPrice(state *SessionState) float64 {
 		}
 	}
 	return 0.0
+}
+
+func PersistCompleteDataSets(state *SessionState) {
+	cacheDir, err := os.UserCacheDir()
+	if err == nil {
+		// Check if cache directory exists and if not create it
+		if _, err = os.Stat(cacheDir + string(os.PathSeparator) + "CommandTower"); errors.Is(err, os.ErrNotExist) {
+			os.Mkdir(cacheDir+string(os.PathSeparator)+"CommandTower", os.ModePerm)
+		}
+		// Check if cache exists and if not create it
+		if _, err = os.Stat(cacheDir + string(os.PathSeparator) + "CommandTower" + string(os.PathListSeparator) + "commander_data.json"); errors.Is(err, os.ErrNotExist) {
+			os.Create(cacheDir + string(os.PathSeparator) + "CommandTower" + string(os.PathListSeparator) + "commander_data.json")
+		}
+		for i := range state.commanderCount {
+			if state.prevCommanderImages[i] != nil && state.prevCommanderDecklists != nil {
+				// TODO: ADD MARSHALLING
+			}
+		}
+	}
 }
