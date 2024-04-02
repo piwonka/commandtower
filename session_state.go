@@ -11,6 +11,7 @@ import (
 type SessionState struct {
 	commanderCount          int
 	backSteps               int
+	currentCardFace         int
 	prevCommanderNames      []string
 	prevCommanderImages     []fyne.Resource
 	prevCommanderDecklists  []string
@@ -84,6 +85,23 @@ func GetCurrentDeckPrice(state *SessionState) float64 {
 		}
 	}
 	return 0.0
+}
+
+func GetOtherCardFaceForCurrentCard(state *SessionState) fyne.Resource {
+	currCommanderName := state.prevCommanderNames[state.commanderCount-state.backSteps]
+	if state.currentCardFace == 0 {
+		state.currentCardFace = 1
+	} else {
+		state.currentCardFace = 0
+	}
+
+	uri := GetAlternateCardFace(currCommanderName, state.currentCardFace)
+	println(uri)
+	resource := GetImageResource(uri)
+	if resource.Name() == resourcePlaceholderPng.Name() {
+		return nil
+	}
+	return resource
 }
 
 func PersistCompleteDataSets(state *SessionState) {

@@ -125,7 +125,7 @@ func ParseScryfallData(jsonData string) (string, string) {
 	if found { // if the card is double faced we get only the first card image
 		formattedCardName = firstCardName
 		if imageUri == "" {
-			imageUri = gjson.Get(jsonData, "card_faces.0.image_uris.normal").String()
+			imageUri = gjson.Get(jsonData, "card_faces.0.image_uris.border_crop").String()
 
 		}
 	}
@@ -264,4 +264,15 @@ func splitDeckListIntoChunks(decklist []string, numberOfChunks int) [][]string {
 		prev = high
 	}
 	return result
+}
+
+// GetAlternateCardFace
+// retrives the alternate card face uri for the card if it is a flip card, otherwise return nil
+func GetAlternateCardFace(name string, index int) string {
+	resp, err := GetScryfallCommanderData("https://api.scryfall.com/cards/named?fuzzy=" + url.QueryEscape(name))
+	if err != nil {
+		return ""
+	}
+	println("card_faces." + strconv.Itoa(index) + ".image_uris.border_crop")
+	return gjson.Get(resp, "card_faces."+strconv.Itoa(index)+".image_uris.border_crop").String()
 }

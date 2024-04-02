@@ -25,7 +25,7 @@ func GetImageResource(imageUri string) fyne.Resource {
 	return r
 }
 
-func NewCheckboxWithIcon(resource *fyne.StaticResource) (*widget.Check, *fyne.Container) {
+func NewCheckboxWithIcon(resource *fyne.StaticResource) (*widget.Check, *fyne.Container) { // TODO: create a custom widget for this
 
 	checkBox := widget.NewCheck("", nil)
 	img := canvas.NewImageFromResource(resource)
@@ -49,10 +49,14 @@ func GetSelectedChoices(choiceColorMap map[*widget.Check]string) []string {
 func main() {
 	// initialize session State
 	state := SessionState{
-		commanderCount:         -1, // -1 == we don't have any commanders; 0 == we have a commander and its index in the cache is 0; ...
-		backSteps:              0,
-		prevCommanderImages:    make([]fyne.Resource, 0),
-		prevCommanderDecklists: make([]string, 0)}
+		commanderCount:          -1, // -1 == we don't have any commanders; 0 == we have a commander and its index in the cache is 0; ...
+		backSteps:               0,
+		currentCardFace:         0,
+		prevCommanderNames:      make([]string, 0),
+		prevCommanderImages:     make([]fyne.Resource, 0),
+		prevCommanderDecklists:  make([]string, 0),
+		prevCommanderDeckPrices: make([]float64, 0),
+	}
 
 	// init clipboard access
 	err := clipboard.Init()
@@ -85,7 +89,13 @@ func main() {
 	img := canvas.NewImageFromResource(nil)
 	img.Resize(fyne.NewSize(480, 680))
 	img.FillMode = canvas.ImageFillOriginal
-
+	clickableImage := NewClickableImage(img, func() {
+		res := GetOtherCardFaceForCurrentCard(&state)
+		if res != nil {
+			img.Resource = res
+			img.Refresh()
+		}
+	})
 	// Price Checking
 	priceContainer := container.NewCenter()
 	// price label
@@ -107,8 +117,8 @@ func main() {
 	previous := widget.NewButtonWithIcon("", theme.NavigateBackIcon(), func() {
 		image := GetPreviousCommanderData(&state)
 		if image != nil { // if there is a previous commander
-			img.Resource = image
-			img.Refresh()
+			clickableImage.image.Resource = image
+			clickableImage.image.Refresh()
 			priceContainer.RemoveAll()
 			priceContainer.Add(priceCheck)
 		}
@@ -122,14 +132,14 @@ func main() {
 	//Next
 	next := widget.NewButtonWithIcon("", theme.NavigateNextIcon(), func() {
 		image := GetNextCommanderData(&state, GetSelectedChoices(choiceColorMap), searchQuery.Text)
-		img.Resource = image
-		img.Refresh()
+		clickableImage.image.Resource = image
+		clickableImage.image.Refresh()
 		priceContainer.RemoveAll()
 		priceContainer.Add(priceCheck)
 	})
 
 	buttons := container.NewCenter(container.NewHBox(previous, get, next))
-	vBox := container.NewVBox(searchQuery, img, container.NewCenter(choices), buttons, priceContainer)
+	vBox := container.NewVBox(searchQuery, clickableImage, container.NewCenter(choices), buttons, priceContainer)
 	w.SetContent(vBox)
 	w.SetIcon(resourceIconPng)
 
@@ -137,8 +147,8 @@ func main() {
 	// pull any first commander image
 	image := GetNextCommanderData(&state, GetSelectedChoices(choiceColorMap), searchQuery.Text) // get any first commander (nothing selected)
 	// Set the Image inside the View and Refresh
-	img.Resource = image
-	img.Refresh()
+	clickableImage.image.Resource = image
+	clickableImage.image.Refresh()
 
 	w.ShowAndRun()
 }
